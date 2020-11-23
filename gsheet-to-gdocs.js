@@ -13,11 +13,12 @@ function RenderGdocTemplate() {
   const documentTemplateId = "1RCaTCZqIPAnM2vrW1z5PfAD_4M8CHN3SPIcQModKcP4";
   const outputFolderId = "12wA6fsRFeTxKKifRYXNd9xIUmWSripAH";
   const startRow = 1;
+  const endRow = undefined;
 
-  return renderGdocTemplate(documentTemplateId, outputFolderId, startRow);
+  return renderGdocTemplate(documentTemplateId, outputFolderId, startRow, endRow);
 }
 
-function renderGdocTemplate(documentTemplateId, outputFolderId, startRow) {
+function renderGdocTemplate(documentTemplateId, outputFolderId, startRow, lastRow) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
 
@@ -29,7 +30,8 @@ function renderGdocTemplate(documentTemplateId, outputFolderId, startRow) {
   const doc = DocumentApp.openById(destinationFile.getId());
 
   // Assumes field names are in the first row.
-  const sheetData = sheet.getRange(startRow, 1, sheet.getLastRow()-1, sheet.getLastColumn()).getValues();
+  const lastRow = endRow || sheet.getLastRow()-1;
+  const sheetData = sheet.getRange(startRow, 1, lastRow, sheet.getLastColumn()).getValues();
   const headers = sheetData[0];
 
   //var section = doc.getActiveSection();
