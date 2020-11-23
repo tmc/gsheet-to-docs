@@ -10,9 +10,14 @@ function onOpen() {
 }
 
 function RenderGdocTemplate() {
-  const documentTemplateId = "1W2PHmWl6kI1GnzkVusZ5ihbn5gZRA5IePqPCfmK9fes";
-  const outputFolderId = "1_WHSd9IX1ysYuw6sI2R2eQOJAo7k8jvT";
+  const documentTemplateId = "1RCaTCZqIPAnM2vrW1z5PfAD_4M8CHN3SPIcQModKcP4";
+  const outputFolderId = "12wA6fsRFeTxKKifRYXNd9xIUmWSripAH";
+  const startRow = 1;
 
+  return renderGdocTemplate(documentTemplateId, outputFolderId, startRow);
+}
+
+function renderGdocTemplate(documentTemplateId, outputFolderId, startRow) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getActiveSheet();
 
@@ -23,12 +28,11 @@ function RenderGdocTemplate() {
   destinationFile.moveTo(folder);
   const doc = DocumentApp.openById(destinationFile.getId());
 
-  const sheetData = sheet
-    .getRange(2, 1, sheet.getLastRow() - 1, sheet.getLastColumn())
-    .getValues();
-
+  // Assumes field names are in the first row.
+  const sheetData = sheet.getRange(startRow, 1, sheet.getLastRow()-1, sheet.getLastColumn()).getValues();
   const headers = sheetData[0];
 
+  //var section = doc.getActiveSection();
   const tmpl = templateDoc.getBody();
 
   const body = doc.getBody();
@@ -44,9 +48,27 @@ function RenderGdocTemplate() {
       text.replaceText("{{" + h + "}}", sheetData[i][j]);
     });
 
-    newContent.getParagraphs().forEach(function (p) {
-      body.appendParagraph(p.copy());
-    });
+    const nChildren = newContent.getNumChildren();
+    for (let i = 0; i < nChildren; i++) {
+      const child = newContent.getChild(i).copy();
+      switch(child.getType()) {
+        case DocumentApp.ElementType.PARAGRAPH:
+          body.appendParagraph(child.asParagraph());
+          break;
+        case DocumentApp.ElementType.TABLE:
+          body.appendTable(child.asTable());
+          break;
+        case DocumentApp.ElementType.LIST_ITEM:
+          body.appendListItem(child.asListItem());
+          break;
+        case DocumentApp.ElementType.INLINE_IMAGE:
+          body.appendImage(child.asInlineImage());
+          break
+        default:
+          body.appendParagraph(child.getText());
+          break
+      }
+    }
 
     // body.appendPageBreak();
     body.appendHorizontalRule();
